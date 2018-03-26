@@ -1,7 +1,7 @@
 /*
 * @Name: 
 * @Description: Screen dimmer to protect your eyes while get calm read in your screen
-* @Version: 0.2
+* @Version: 1.0
 * @Author: Marcos Per
 * @Source: https://github.com/MarcosPer
 */
@@ -37,25 +37,6 @@ function init() {
 
     /* Put indicator centered on screen */
     indicator.set_position(Math.floor(primaryMonitor.width / 2 - indicator.width / 2), Math.floor(primaryMonitor.height / 2 - indicator.height / 2));
-
-    /* Create overlay for each monitor */
-    let monitors = Main.layoutManager.monitors;
-    for (i = 0; i < monitors.length; i++) {
-        let monitor = monitors[i];
-        /* Create overlay */
-        let overlay = new St.Label({ style_class: 'overlay'});
-        /* If debbuging set text to each screen */
-        if(debug){
-            overlay.set_text("Monitor "+i + " width: "+ monitor.width + " height: " + monitor.height + " Position X: " + monitor.x + " Y: "+ monitor.y)
-        }
-        /* Resize overlay as monitor resolution */ 
-        overlay.set_height(monitor.height);
-        overlay.set_width(monitor.width);
-        /* Position overlay at monitor position */ 
-        overlay.set_position(monitor.x, monitor.y);
-        /* Add to overlays */
-        this.overlays.push(overlay);
-    }
 }
 
 function enable() {
@@ -66,19 +47,36 @@ function disable() {
     Main.panel._rightBox.remove_child(button);
     destroyOverlay();
 }
-function showOverlay() {
-    for (i = 0; i < overlays.length; i++) {
-        Main.uiGroup.add_actor(overlays[i]);
-    }
+
+function createOverlay() {
     enabled = true;
+    /* Create overlay for each monitor */
+    let monitors = Main.layoutManager.monitors;
+    for (i = 0; i < monitors.length; i++) {
+        let monitor = monitors[i];
+        /* Create overlay */
+        let overlay = new St.Label(
+        {
+            style_class: 'overlay'
+        });
+        /* If debbuging set text to each screen */
+        if (debug) {
+        overlay.set_text('Monitor ' + i + ' width: ' + monitor.width + ' height: ' + monitor.height + ' Position X: ' + monitor.x + ' Y: ' + monitor.y);
+        }
+        /* Resize overlay as monitor resolution */
+
+        overlay.set_height(monitor.height);
+        overlay.set_width(monitor.width);
+        /* Position overlay at monitor position */
+
+        overlay.set_position(monitor.x, monitor.y);
+
+        /* Add to overlays */
+        this.overlays.push(overlay);
+        Main.uiGroup.add_actor(overlay);
+    }
 }
 
-function hideOverlay() {
-    for (i = 0; i < overlays.length; i++) {
-      Main.uiGroup.remove_actor(overlays[i]);
-    }
-    enabled = false;
-}
 function destroyOverlay() {
     // Remove all overlays 
     for(i = 0; i< overlays.length; i++){
@@ -96,7 +94,7 @@ function refreshOverlay() {
 
 function scrollEvent(widget, event, pointer) {
     if(!enabled){
-        showOverlay();
+        createOverlay();
     }
     let direction = event.get_scroll_direction();
     switch (direction) {
@@ -121,9 +119,9 @@ function scrollEvent(widget, event, pointer) {
 
 function buttonEvent(widget, event, pointer) {
     if(enabled){
-        hideOverlay();
+        destroyOverlay();
     }else{
-        showOverlay();
+        createOverlay();
     }
 }
 
@@ -145,3 +143,21 @@ function hideIndicator() {
       onComplete: () => { Main.uiGroup.remove_actor(indicator); }
     });
 }
+
+/*
+    OLD FUNCTIONS
+    
+function showOverlay() {
+    for (i = 0; i < overlays.length; i++) {
+        Main.uiGroup.add_actor(overlays[i]);
+    }
+    enabled = true;
+}
+
+function hideOverlay() {
+    for (i = 0; i < overlays.length; i++) {
+      Main.uiGroup.remove_actor(overlays[i]);
+    }
+    enabled = false;
+}
+*/
